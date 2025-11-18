@@ -1,48 +1,54 @@
 """
-Database Schemas
+Database Schemas for Creator Social App
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
+Each Pydantic model corresponds to a MongoDB collection. The collection name is the lowercase of the class name.
+- Creator -> "creator"
+- Segment -> "segment"
 
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+These schemas are used for validation when creating/editing documents.
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
+from pydantic import BaseModel, Field, HttpUrl
 
-# Example schemas (replace with your own):
 
+class Segment(BaseModel):
+    """Content segment/category (e.g., Tech, Gaming, Beauty)."""
+    name: str = Field(..., description="Display name of the segment")
+    slug: str = Field(..., description="URL-friendly unique identifier")
+    description: Optional[str] = Field(None, description="Short description of the segment")
+    cover_image: Optional[HttpUrl] = Field(None, description="Hero/cover image for the segment")
+    color: Optional[str] = Field(None, description="Hex color used in UI accents for this segment")
+
+
+class Creator(BaseModel):
+    """Creator profile stored in the database."""
+    name: str = Field(..., description="Creator's display name")
+    handle: Optional[str] = Field(None, description="Primary handle without @")
+    platforms: List[str] = Field(default_factory=list, description="Platforms where the creator is active")
+    avatar_url: Optional[HttpUrl] = Field(None, description="Avatar or profile image URL")
+    banner_url: Optional[HttpUrl] = Field(None, description="Banner/cover image URL")
+    bio: Optional[str] = Field(None, description="Short bio")
+    segments: List[str] = Field(..., description="List of segment slugs the creator belongs to")
+    location: Optional[str] = Field(None, description="City/Country")
+    languages: List[str] = Field(default_factory=list, description="Languages the creator uses")
+    website: Optional[HttpUrl] = Field(None, description="Personal site or link-in-bio")
+    followers: int = Field(0, ge=0, description="Approx total followers across platforms")
+    rating: float = Field(0.0, ge=0, le=5, description="Community score 0-5")
+    verified: bool = Field(False, description="Verified by the community/platform")
+
+
+# Example schemas kept for reference by the viewer
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str
+    email: str
+    address: str
+    age: Optional[int] = None
+    is_active: bool = True
 
 class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+    title: str
+    description: Optional[str] = None
+    price: float
+    category: str
+    in_stock: bool = True
